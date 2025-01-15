@@ -64,8 +64,8 @@ A: The library can handle numbers up to 2^4096(a tip: don't use bitwise operatio
 - Q: How accurate are the calculations in this library?
 - A: The library offers arbitrary precision, meaning calculations are only limited by the memory and system resources available. You can perform calculations with a high degree of accuracy, suitable for financial applications, scientific computing, and cryptographic operations.
 
-Q: Can I contribute to this library?
-A: Yes! Contributions are welcome. You can submit pull requests with improvements, optimizations, or new features. Make sure to check the contribution guidelines in the repository before submitting.
+- Q: Can I contribute to this library?
+- A: Yes! Contributions are welcome. You can submit pull requests with improvements, optimizations, or new features. Make sure to check the contribution guidelines in the repository before submitting.
 
 ## Contributing
 Contributions are welcome! Please follow these steps:

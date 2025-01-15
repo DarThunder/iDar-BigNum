@@ -193,7 +193,6 @@ function bigNum.fromBinary(binary)
     return result
 end
 
--- Bitwise AND
 function bigNum.and_bitwise(a, b)
     if a == b then return a end
     local binA = bigNum.toBinary(a)
