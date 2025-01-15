@@ -10,11 +10,16 @@ An efficient and flexible library for handling arbitrary-precision numbers in Lu
 - [License](#license)
 
 ## Features
-- RSA encryption and decryption (WIP)
-- AES block cipher implementation
-- SHA-256 hashing algorithm
-- Lightweight and optimized for ComputerCraft: Tweaked
-- Modular and extensible design
+- Arbitrary-precision arithmetic for very large numbers (up to 2^4096)
+- Fast exponentiation for efficient power calculations
+- Addition, subtraction, multiplication, and division of large numbers
+- Optimized for Lua and ComputerCraft environments
+- Modular and extensible design for future functionality
+- String-based number handling for precision
+- Supports operations on numbers that exceed typical Lua number limits (seriously, a lot)
+- Simple and easy-to-use API for handling large integers
+- Efficient algorithms for managing large number computations
+- Built-in safety checks for invalid operations (e.g., division by zero)
 
 ## Requirements
 - Minecraft with the ComputerCraft: Tweaked mod installed
