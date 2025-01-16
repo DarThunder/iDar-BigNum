@@ -4,6 +4,16 @@ function bigNum.compare(a, b)
     a = a:gsub("^0+", "")
     b = b:gsub("^0+", "")
 
+    if a == "" and b == "" then
+        return 0
+    end
+
+    if a == "" then
+        return -1
+    elseif b == "" then
+        return 1
+    end
+
     if #a > #b then
         return 1
     elseif #a < #b then
@@ -133,7 +143,8 @@ function bigNum.mod(a, m)
         end
     end
 
-    return current
+    current = current:gsub("^0+", "")
+    return current == "" and "0" or current
 end
 
 function bigNum.modExp(base, exp, mod)
@@ -141,7 +152,7 @@ function bigNum.modExp(base, exp, mod)
     base = bigNum.mod(base, mod)
 
     while exp ~= "0" do
-        if tonumber(exp:sub(-1)) % 2 == 1 then
+        if bigNum.mod(exp, "2") == "1" then
             result = bigNum.mod(bigNum.mul(result, base), mod)
         end
         exp = bigNum.div(exp, "2")
@@ -169,9 +180,6 @@ function bigNum.toBinary(num)
     while bigNum.compare(num, "0") > 0 do
         local remainder = bigNum.mod(num, "2")
 
-        if remainder:sub(1, 2) == "00" or remainder:sub(1, 2) == "01" then
-            remainder = remainder:sub(2, 2)
-        end
         table.insert(binary, 1, remainder)
 
         num = bigNum.div(num, "2")
