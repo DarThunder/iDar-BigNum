@@ -34,6 +34,22 @@ function bigNum.compare(a, b)
 end
 
 function bigNum.add(a, b)
+    local negative = false
+    if a:sub(1, 1) == "-" and b:sub(1, 1) ~= "-" then
+        negative = true
+        a = a:sub(2)
+    elseif b:sub(1, 1) == "-" and a:sub(1, 1) ~= "-" then
+        negative = true
+        b = b:sub(2)
+    elseif a:sub(1, 1) == "-" and b:sub(1, 1) == "-" then
+        a = a:sub(2)
+        b = b:sub(2)
+    end
+
+    if negative then
+        return "-" .. bigNum.add(a, b)
+    end
+
     local carry = 0
     local result = {}
     a, b = a:reverse(), b:reverse()
@@ -55,20 +71,48 @@ function bigNum.add(a, b)
 end
 
 function bigNum.sub(a, b)
+    local aNegative = a:sub(1, 1) == "-"
+    local bNegative = b:sub(1, 1) == "-"
+
+    if aNegative then a = a:sub(2) end
+    if bNegative then b = b:sub(2) end
+
+    if aNegative ~= bNegative then
+        if aNegative then
+            return "-" .. bigNum.add(a, b)
+        else
+            return bigNum.add(a, b)
+        end
+    end
+
+    local negative = false
+    if aNegative and bNegative then
+        a, b = b, a
+    elseif #a < #b or (#a == #b and a < b) then
+        negative = true
+        a, b = b, a
+    end
+
     local borrow = 0
     local result = {}
     a, b = a:reverse(), b:reverse()
+
+    while #b < #a do
+        b = b .. "0"
+    end
 
     for i = 1, #a do
         local digitA = tonumber(a:sub(i, i)) or 0
         local digitB = tonumber(b:sub(i, i)) or 0
         local diff = digitA - digitB - borrow
+
         if diff < 0 then
             diff = diff + 10
             borrow = 1
         else
             borrow = 0
         end
+
         table.insert(result, diff)
     end
 
@@ -76,10 +120,18 @@ function bigNum.sub(a, b)
         table.remove(result)
     end
 
-    return table.concat(result):reverse()
+    local subNum = table.concat(result):reverse()
+    if negative then subNum = "-" .. subNum end
+    return subNum
 end
 
 function bigNum.mul(a, b)
+    local aNegative = a:sub(1, 1) == "-"
+    local bNegative = b:sub(1, 1) == "-"
+
+    if aNegative then a = a:sub(2) end
+    if bNegative then b = b:sub(2) end
+
     local result = "0"
     a, b = a:reverse(), b:reverse()
 
@@ -106,11 +158,27 @@ function bigNum.mul(a, b)
         result = bigNum.add(result, table.concat(temp):reverse())
     end
 
+    if aNegative ~= bNegative and result ~= "0" then
+        result = "-" .. result
+    end
+
     return result
 end
 
 function bigNum.div(a, b)
     assert(b ~= "0", "Division by zero is not allowed")
+
+    local negative = false
+    if a:sub(1, 1) == "-" and b:sub(1, 1) ~= "-" then
+        negative = true
+        a = a:sub(2)
+    elseif b:sub(1, 1) == "-" and a:sub(1, 1) ~= "-" then
+        negative = true
+        b = b:sub(2)
+    elseif a:sub(1, 1) == "-" and b:sub(1, 1) == "-" then
+        a = a:sub(2)
+        b = b:sub(2)
+    end
 
     local quotient = ""
     local remainder = "0"
@@ -129,7 +197,13 @@ function bigNum.div(a, b)
     end
 
     quotient = quotient:gsub("^0+", "")
-    return quotient == "" and "0" or quotient
+    quotient = (quotient == "" and "0" or quotient)
+
+    if negative and quotient ~= "0" then
+        quotient = "-" .. quotient
+    end
+
+    return quotient
 end
 
 function bigNum.mod(a, m)
