@@ -44,3 +44,9 @@ Notes
 This is "Beta 2"! It's a fundamental rewrite focused on stability and performance.
 
 This version **solves the "Known Issue"** from [iDar-CryptoLib](https://github.com/DarThunder/iDar-CryptoLib). The bottleneck that limited RSA to 32 bits has been eliminated. [iDar-BigNum](https://github.com/DarThunder/iDar-BigNum) now supports the generation and operation of much larger RSA keys.
+
+### v2.0.1
+
+#### Added
+
+- **Package Manager Support:** Added `manifest.lua` to enable direct installation and dependency resolution via **iDar-Pacman**.

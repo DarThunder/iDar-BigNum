@@ -2,6 +2,9 @@ local B = {}
 local mt = { __index = B }
 local BASE = 256
 
+local bit = bit32 or bit
+B.yield_function = _CC_DEFAULT_SETTINGS and B.yield_function or function(x) end
+
 local function zero_digits()
     return {0}
 end
@@ -462,7 +465,7 @@ function B:sqrt()
         prev_x = x
         x = (x + (n / x)) / TWO
         iterations = iterations + 1
-        os.sleep(0)
+        B.yield_function(0)
     until x >= prev_x
     return prev_x
 end
@@ -480,7 +483,7 @@ function B:modExp(exp, mod)
     local TWO = B.new(2)
 
     while exp_obj > ZERO do
-        os.sleep(0)
+        B.yield_function(0)
 
         if (exp_obj % TWO) == ONE then
             result = (result * base) % mod_obj
