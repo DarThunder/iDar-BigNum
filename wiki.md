@@ -18,7 +18,7 @@ The BigNum library provides mathematical operations for integers of unlimited si
 ## Installation
 
 ```lua
-local bignum = require("idar-bn.bigNum")
+local bignum = require("iDar.Bignum.src.bigNum")
 ```
 
 ## Basic Usage
@@ -194,7 +194,7 @@ local public_key = base_point * private_key
 ### 1. **Financial Calculations**
 
 ```lua
-local bignum = require("bigNum")
+local bignum = require("iDar.Bignum.src.bigNum")
 
 -- Large currency calculations (avoid floating-point errors)
 local salary = bignum("7500000000000000")  -- 7.5 trillion

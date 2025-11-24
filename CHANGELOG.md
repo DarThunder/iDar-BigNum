@@ -50,3 +50,20 @@ This version **solves the "Known Issue"** from [iDar-CryptoLib](https://github.c
 #### Added
 
 - **Package Manager Support:** Added `manifest.lua` to enable direct installation and dependency resolution via **iDar-Pacman**.
+
+### v2.0.2
+
+#### Added
+
+- New require paths compatible with iDar-Pacman package structure
+- Support for absolute module paths: `require("iDar.BigNum.src.bigNum")`
+
+#### Changed
+
+- Updated installation instructions to use iDar-Pacman as primary method
+- Restructured internal file organization for better package management
+
+#### Removed
+
+- Automated installer script (`installer.lua`)
+- Legacy installation method using `wget run`

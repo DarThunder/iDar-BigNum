@@ -30,24 +30,26 @@ An efficient and flexible library for handling arbitrary-precision numbers in Lu
 
 ## Getting Started
 
-### Install in ComputerCraft:
-
-1.  use this command in the terminal of the computer/pocket computer to use.
+### Recommended Installation (via iDar-Pacman):
 
 ```lua
-wget run https://raw.githubusercontent.com/DarThunder/iDar-BigNum/refs/heads/main/installer.lua
+pacman -S idar-bignum
 ```
 
-2.  wait of the installation process.
+### Manual Installation:
+
+1. Download the library files from the releases page
+2. Place them in your ComputerCraft computer's `/iDar/Bignum/src` directory
+3. Use absolute paths to require the module:
 
 ### Load the library:
 
-1.  Use `require("idar-bn.bigNum")` to load the library into your ComputerCraft programs.
+1.  Use `require("iDar.Bignum.src.bigNum")` to load the library into your ComputerCraft programs.
 
 ## Usage
 
 ```lua
-local bignum = require("idar-bn.bigNum")
+local bignum = require("iDar.Bignum.src.bigNum")
 local ZERO = bignum("0")
 local P = bignum("115792089237316195423570985008687907853269984665640564039457584007908834671663") -- secp256k1 P
 
