@@ -67,3 +67,9 @@ This version **solves the "Known Issue"** from [iDar-CryptoLib](https://github.c
 
 - Automated installer script (`installer.lua`)
 - Legacy installation method using `wget run`
+
+### v2.0.3
+
+#### Changed
+
+- Manifest updated for compatibility with iDar-Pacman Alpha v2
