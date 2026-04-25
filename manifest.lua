@@ -1,7 +1,7 @@
 return {
     directory = "Bignum",
     files = {
-        ["src"] = "bigNum.lua"
+        ["bigNum.lua"] = "src/bigNum.lua"
     },
     dependencies = nil
 }

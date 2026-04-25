@@ -73,3 +73,9 @@ This version **solves the "Known Issue"** from [iDar-CryptoLib](https://github.c
 #### Changed
 
 - Manifest updated for compatibility with iDar-Pacman Alpha v2
+
+### v2.0.4
+
+#### Changed
+
+- Manifest updated for compatibility with SATD V2.6

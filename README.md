@@ -39,17 +39,17 @@ pacman -S idar-bignum
 ### Manual Installation:
 
 1. Download the library files from the releases page
-2. Place them in your ComputerCraft computer's `/iDar/Bignum/src` directory
+2. Place them in your ComputerCraft computer's `/Bignum/` directory
 3. Use absolute paths to require the module:
 
 ### Load the library:
 
-1.  Use `require("iDar.Bignum.src.bigNum")` to load the library into your ComputerCraft programs.
+1.  Use `require("Bignum.bigNum")` to load the library into your ComputerCraft programs.
 
 ## Usage
 
 ```lua
-local bignum = require("iDar.Bignum.src.bigNum")
+local bignum = require("Bignum.bigNum")
 local ZERO = bignum("0")
 local P = bignum("115792089237316195423570985008687907853269984665640564039457584007908834671663") -- secp256k1 P
 
