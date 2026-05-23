@@ -12,8 +12,8 @@ The BigNum library provides mathematical operations for integers of unlimited si
 - **Bitwise Operations**: AND, OR, XOR, left/right shifts
 - **Modular Arithmetic**: Modular exponentiation (crucial for RSA)
 - **Number Conversion**: Binary, decimal, and byte array conversions
-- **Memory Efficient**: Uses base-256 internal representation
-- **Optimized Algorithms**: Efficient division and multiplication
+- **Memory Efficient**: Uses Base 2²⁶ internal representation
+- **Optimized Algorithms**: Efficient division (Knuth's algorithm) and multiplication
 
 ## Installation
 
@@ -146,23 +146,21 @@ local bitmask = bignum.fromBinary("11110000")
 
 ## Internal Representation
 
-The library uses a **base-256** digit system internally, making it efficient for:
-
-- Cryptographic operations
-- Byte-level manipulations
-- Memory optimization
+The library uses a **Base 2²⁶** digit system internally. Each "digit" holds a value from 0 to 2²⁶-1, which keeps all intermediate multiplication results within Lua's native float precision (doubles can represent integers exactly up to 2⁵³), avoiding overflow without needing extra guards.
 
 Each number is stored as:
 
 - `sign`: 1 for positive, -1 for negative
-- `digits`: Array of base-256 digits (least significant first)
+- `digits`: Array of Base 2²⁶ digits (least significant first)
+
+This design is the reason for the significant performance gains over the previous Base 256 implementation — see [Performance Considerations](#performance-considerations).
 
 ## Performance Considerations
 
-- **Division/Multiplication**: Most computationally expensive operations
-- **Memory Usage**: Grows with number size, but optimized for base-256
-- **Cryptographic Use**: Highly optimized for modular exponentiation (RSA)
-- **ComputerCraft**: Includes `os.sleep(0)` in long operations to prevent timeouts
+- **Base 2²⁶ backend**: The jump from Base 256 to Base 2²⁶ dramatically reduced the number of digit-level operations required for large multiplications and divisions. In real-world benchmarks on CC:Tweaked running secp256k1 ECC, **public key generation dropped from ~5s to ~0.85s — roughly a 6x speedup**.
+- **Division/Multiplication**: Still the most computationally expensive operations, but significantly faster than Base 256.
+- **Memory Usage**: Grows with number size, but each Base 2²⁶ digit packs more value than a Base 256 byte, so fewer digits are needed for the same number.
+- **ComputerCraft**: Includes `os.sleep(0)` in long operations to prevent "too long without yielding" crashes.
 
 ## Use in Cryptography
 
@@ -178,15 +176,15 @@ local n = p * q  -- RSA modulus
 local encrypted = message:modExp(e, n)
 local decrypted = encrypted:modExp(d, n)
 
--- ECC operations
-local private_key = bignum.randomLargeNumber()
-local public_key = base_point * private_key
+-- ECC operations (secp256k1)
+local private_key = bignum.fromBytes(random_bytes)
+local public_key = scalar_multiply(private_key, G)
 ```
 
 ## Limitations
 
-- **Performance**: Pure Lua implementation, slower than native bignum libraries
-- **ComputerCraft**: Limited by Lua VM performance in Minecraft
+- **Performance**: Pure Lua implementation, slower than native bignum libraries — though the Base 2²⁶ backend closes the gap significantly
+- **ComputerCraft**: Still limited by the Lua VM running inside a JVM inside Minecraft (6 layers of abstraction)
 - **Memory**: Large numbers consume significant memory
 
 ## Examples
@@ -258,7 +256,7 @@ print("New score: " .. tostring(new_score))
 
 -- Probability calculations
 function binomial_probability(trials, successes, prob_success)
-    local prob = bignum(prob_success)  -- As integer percentage
+    local prob = bignum(prob_success)
     local combos = combinations(trials, successes)
     local prob_term = (prob ^ successes) * ((bignum(100) - prob) ^ (trials - successes))
     return (combos * prob_term) / (bignum(100) ^ trials)
@@ -279,10 +277,10 @@ local new_id = current_id + bignum(1)
 print("New ID: " .. tostring(new_id))
 
 -- Bitmask operations for permissions systems
-local USER_READ = bignum.fromBinary("0001")
-local USER_WRITE = bignum.fromBinary("0010")
+local USER_READ    = bignum.fromBinary("0001")
+local USER_WRITE   = bignum.fromBinary("0010")
 local USER_EXECUTE = bignum.fromBinary("0100")
-local USER_ADMIN = bignum.fromBinary("1000")
+local USER_ADMIN   = bignum.fromBinary("1000")
 
 local user_permissions = USER_READ:bor(USER_WRITE)
 
@@ -290,7 +288,7 @@ function has_permission(user_perm, required_perm)
     return user_perm:band(required_perm) == required_perm
 end
 
-print("Can user read? " .. tostring(has_permission(user_permissions, USER_READ)))
+print("Can user read? "    .. tostring(has_permission(user_permissions, USER_READ)))
 print("Can user execute? " .. tostring(has_permission(user_permissions, USER_EXECUTE)))
 ```
 
@@ -329,7 +327,7 @@ end
 local fib_200 = fibonacci(200)
 print("Fibonacci(200) = " .. tostring(fib_200))
 
--- Greatest Common Divisor (using your internal gcd)
+-- Greatest Common Divisor
 function gcd(a, b)
     a, b = bignum(a), bignum(b)
     while b ~= bignum(0) do
@@ -350,15 +348,15 @@ local huge_number = bignum("123456789012345678901234567890")
 local byte_representation = huge_number:toBytes()
 local reconstructed = bignum.fromBytes(byte_representation)
 
-print("Original: " .. tostring(huge_number))
+print("Original: "      .. tostring(huge_number))
 print("Reconstructed: " .. tostring(reconstructed))
-print("Bytes used: " .. #byte_representation)
+print("Bytes used: "    .. #byte_representation)
 
 -- Efficient storage of large configuration values
 local config = {
-    max_users = bignum("1000000000000"),
+    max_users         = bignum("1000000000000"),
     max_storage_bytes = bignum("1000000000000000000"),
-    start_timestamp = bignum("1704067200000")  -- Unix timestamp in milliseconds
+    start_timestamp   = bignum("1704067200000")  -- Unix timestamp in milliseconds
 }
 ```
 
@@ -376,16 +374,17 @@ function is_power_of_two(n)
 end
 
 local test_num = bignum("1099511627776")  -- 2^40
-print(tostring(test_num) .. " is even: " .. tostring(is_even(test_num)))
-print(tostring(test_num) .. " is power of two: " .. tostring(is_power_of_two(test_num)))
+print(tostring(test_num) .. " is even: "          .. tostring(is_even(test_num)))
+print(tostring(test_num) .. " is power of two: "  .. tostring(is_power_of_two(test_num)))
 ```
 
 ## Why Use BigNum Over Native Numbers?
 
-| Use Case                        | Native Lua Numbers    | BigNum Library             |
-| ------------------------------- | --------------------- | -------------------------- |
-| Financial calculations          | Floating-point errors | **Exact precision**        |
-| Large IDs (> 2^53)              | Lose precision        | **Perfect accuracy**       |
-| Bit operations on large numbers | Limited to 32 bits    | **Unlimited bits**         |
-| Scientific computing            | Limited range         | **Arbitrary size**         |
-| Educational purposes            | Opaque internals      | **Transparent operations** |
+| Use Case                        | Native Lua Numbers    | BigNum Library              |
+| ------------------------------- | --------------------- | --------------------------- |
+| Financial calculations          | Floating-point errors | **Exact precision**         |
+| Large IDs (> 2^53)              | Lose precision        | **Perfect accuracy**        |
+| Bit operations on large numbers | Limited to 32 bits    | **Unlimited bits**          |
+| Scientific computing            | Limited range         | **Arbitrary size**          |
+| ECC / RSA cryptography          | Impossible            | **~0.85s secp256k1 keygen** |
+| Educational purposes            | Opaque internals      | **Transparent operations**  |

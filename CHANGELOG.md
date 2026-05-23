@@ -25,6 +25,8 @@
 
 Definitely, I never thought that creating and maintaining a big number library would be so complicated. Despite some issues with operating on large numbers, the project is going great. I hope to improve the algorithms I'm using in the coming weeks and address some pending details. Thanks for the support and for using this library!
 
+---
+
 ### v2.0.0
 
 #### Changes
@@ -40,7 +42,8 @@ Definitely, I never thought that creating and maintaining a big number library w
 - **Optimized Algorithms:** Replaced the slow, repeated-subtraction division algorithm with a fast, Knuth-style long division, dramatically improving `div` and `mod` speed.
 - **Prime Generation:** Optimized `sqrt` to yield, allowing the prime-finding functions in `rsa.lua` to run without freezing.
 
-Notes
+#### Notes
+
 This is "Beta 2"! It's a fundamental rewrite focused on stability and performance.
 
 This version **solves the "Known Issue"** from [iDar-CryptoLib](https://github.com/DarThunder/iDar-CryptoLib). The bottleneck that limited RSA to 32 bits has been eliminated. [iDar-BigNum](https://github.com/DarThunder/iDar-BigNum) now supports the generation and operation of much larger RSA keys.
@@ -79,3 +82,28 @@ This version **solves the "Known Issue"** from [iDar-CryptoLib](https://github.c
 #### Changed
 
 - Manifest updated for compatibility with SATD V2.6
+
+---
+
+### v3.0.0
+
+#### Changes
+
+- **Total Re-architecture (Base 2²⁶):** The internal engine has been rewritten again. The Base 256 byte-table backend has been replaced with a Base 2²⁶ digit system. Each digit holds a value from 0 to 2²⁶-1, keeping all intermediate multiplication results within Lua's native double precision (exact up to 2⁵³) and dramatically reducing the number of digit-level operations required for large multiplications and divisions.
+- **Bitwise Operations Rewritten:** `band`, `bor`, `bxor`, `lshift`, and `rshift` have been reimplemented to operate correctly on the new Base 2²⁶ internal representation.
+
+#### Performance
+
+Benchmarked on CC:Tweaked running full secp256k1 ECDH:
+
+| Operation             | v2.x (Base 256) | v3.0.0 (Base 2²⁶) | Speedup |
+| --------------------- | --------------- | ----------------- | ------- |
+| Public key generation | ~5.0s           | ~0.85s            | ~6x     |
+| Shared secret (ECDH)  | ~5.0s           | ~0.85s            | ~6x     |
+| Full ECDH exchange    | ~20s            | ~3.35s            | ~6x     |
+
+#### Notes
+
+This is "Beta 3". Same philosophy as the v2.0.0 rewrite — same API, fundamentally faster engine.
+
+If v2.0.0 unlocked RSA in ComputerCraft, v3.0.0 unlocks **real ECC**. secp256k1 public key generation in under 1 second on a Lua VM inside a JVM inside Minecraft is not something that should be possible. Here we are.

@@ -1,9 +1,8 @@
 local B = {}
 local mt = { __index = B }
-local BASE = 256
+local BASE = 67108864
 
 local bit = bit32 or bit
-B.yield_function = _CC_DEFAULT_SETTINGS and B.yield_function or function(x) end
 
 local function zero_digits()
     return {0}
@@ -66,7 +65,7 @@ end
 
 local function mul_abs(a_digits, b_digits)
     if is_zero(a_digits) or is_zero(b_digits) then return zero_digits() end
-    
+
     local result = {}
     for i = 1, #a_digits do
         local carry = 0
@@ -81,7 +80,7 @@ local function mul_abs(a_digits, b_digits)
     return normalize(result)
 end
 
-local function lshift_bytes(digits, n)
+local function lshift_digits(digits, n)
     if n <= 0 or is_zero(digits) then return digits end
     local result = {}
     for i = 1, n do
@@ -92,7 +91,6 @@ local function lshift_bytes(digits, n)
     end
     return normalize(result)
 end
-
 
 local function mul_by_small(digits, n)
     local carry = 0
@@ -170,12 +168,12 @@ local function divmod_abs(a_digits, b_digits)
         if q_hat >= BASE then q_hat = BASE - 1 end
 
         local prod = mul_by_small(b_digits, q_hat)
-        prod = lshift_bytes(prod, i)
+        prod = lshift_digits(prod, i)
 
         while q_hat > 0 and compare_abs(remainder, prod) < 0 do
             q_hat = q_hat - 1
             prod = mul_by_small(b_digits, q_hat)
-            prod = lshift_bytes(prod, i)
+            prod = lshift_digits(prod, i)
         end
 
         remainder = sub_abs(remainder, prod)
@@ -192,7 +190,7 @@ end
 local function fromString(str)
     local digits = zero_digits()
     for i = 1, #str do
-        local digit_val = str:byte(i) - 48 -- '0' es 48
+        local digit_val = str:byte(i) - 48
         if digit_val < 0 or digit_val > 9 then
             error("Invalid number string: " .. str, 2)
         end
@@ -204,16 +202,16 @@ end
 
 local function toString(digits, sign)
     if is_zero(digits) then return "0" end
-    
+
     local s = {}
     local temp_digits = digits
-    
+
     while not is_zero(temp_digits) do
         local remainder
         temp_digits, remainder = divmod_by_small(temp_digits, 10)
-        table.insert(s, 1, string.char(remainder + 48)) -- '0' es 48
+        table.insert(s, 1, string.char(remainder + 48))
     end
-    
+
     local prefix = (sign < 0) and "-" or ""
     return prefix .. table.concat(s)
 end
@@ -223,10 +221,7 @@ function B.new(n)
         return n
     end
 
-    local obj = {
-        sign = 1,
-        digits = zero_digits()
-    }
+    local obj = { sign = 1, digits = zero_digits() }
     setmetatable(obj, mt)
 
     local n_type = type(n)
@@ -258,17 +253,12 @@ function B.new(n)
 end
 
 function B.fromBinary(binaryString)
-    local obj = {
-        sign = 1,
-        digits = {0}
-    }
+    local obj = { sign = 1, digits = {0} }
     setmetatable(obj, mt)
-
     local temp_digits = {0}
 
     for i = 1, #binaryString do
         local bit_val = binaryString:byte(i) - 48
-
         temp_digits = mul_by_small(temp_digits, 2)
 
         if bit_val == 1 then
@@ -284,18 +274,18 @@ function B.fromBinary(binaryString)
 end
 
 function B.fromBytes(str)
-    local obj = { sign = 1, digits = {} }
+    local obj = { sign = 1, digits = {0} }
     setmetatable(obj, mt)
-    if str == nil or #str == 0 then
-        obj.digits = zero_digits()
-        return obj
+    if str == nil or #str == 0 then return obj end
+
+    local temp_digits = {0}
+    for i = #str, 1, -1 do
+        temp_digits = mul_by_small(temp_digits, 256)
+        temp_digits = add_small(temp_digits, str:byte(i))
     end
 
-    for i = 1, #str do
-        obj.digits[i] = str:byte(i)
-    end
-
-    obj.digits = normalize(obj.digits)
+    obj.digits = normalize(temp_digits)
+    if is_zero(obj.digits) then obj.sign = 1 end
     return obj
 end
 
@@ -303,8 +293,11 @@ function B:toBytes()
     if is_zero(self.digits) then return "" end
 
     local chars = {}
-    for i = 1, #self.digits do
-        chars[i] = string.char(self.digits[i])
+    local temp = self.digits
+    while not is_zero(temp) do
+        local remainder
+        temp, remainder = divmod_by_small(temp, 256)
+        table.insert(chars, string.char(remainder))
     end
     return table.concat(chars)
 end
@@ -347,7 +340,7 @@ function B:bitLength()
         bits_in_last = bits_in_last + 1
     end
 
-    return (#self.digits - 1) * 8 + bits_in_last
+    return (#self.digits - 1) * 26 + bits_in_last
 end
 
 function B:add(other)
@@ -425,13 +418,13 @@ function B:pow(exp)
     local base = self:clone()
     local exp_obj = B.new(exp)
     local result = B.new(1)
-    
+
     if exp_obj.sign < 0 then
         if self:toString() == "1" then return B.new(1) end
         if self:toString() == "-1" then return exp_obj:mod(2):toString() == "0" and B.new(1) or B.new(-1) end
         return B.new(0)
     end
-    
+
     local ZERO = B.new(0)
     local ONE = B.new(1)
     local TWO = B.new(2)
@@ -465,7 +458,6 @@ function B:sqrt()
         prev_x = x
         x = (x + (n / x)) / TWO
         iterations = iterations + 1
-        B.yield_function(0)
     until x >= prev_x
     return prev_x
 end
@@ -483,7 +475,6 @@ function B:modExp(exp, mod)
     local TWO = B.new(2)
 
     while exp_obj > ZERO do
-        B.yield_function(0)
 
         if (exp_obj % TWO) == ONE then
             result = (result * base) % mod_obj
@@ -535,34 +526,28 @@ function B:bxor(other)
 end
 
 function B:rshift(n)
-    local n_bytes = math.floor(n / 8)
-    local n_bits = n % 8
+    local n_digits = math.floor(n / 26)
+    local n_bits = n % 26
 
-    local digits = self.digits
     local result = {}
 
-    if n_bytes > 0 then
-        for i = 1, #digits - n_bytes do
-            result[i] = digits[i + n_bytes]
+    if n_digits > 0 then
+        for i = 1, #self.digits - n_digits do
+            result[i] = self.digits[i + n_digits]
         end
         if #result == 0 then return B.new(0) end
     else
-        result = self.digits
+        for i = 1, #self.digits do result[i] = self.digits[i] end
     end
 
     if n_bits > 0 then
-        local rmask = bit.blshift(1, n_bits) - 1
-        local lmask = BASE - 1 - rmask
-
+        local divisor = 2 ^ n_bits
+        local carry = 0
         local new_digits = {}
-        for i = 1, #result do
-            local low = bit.band(result[i], rmask)
-            local high = bit.brshift(bit.band(result[i], lmask), n_bits)
-
-            new_digits[i] = (new_digits[i] or 0) + high
-            if i > 1 then
-                new_digits[i-1] = new_digits[i-1] + bit.blshift(low, 8 - n_bits)
-            end
+        for i = #result, 1, -1 do
+            local val = (result[i] or 0) + carry * BASE
+            new_digits[i] = math.floor(val / divisor)
+            carry = val % divisor
         end
         result = new_digits
     end
@@ -573,30 +558,25 @@ function B:rshift(n)
 end
 
 function B:lshift(n)
-    local n_bytes = math.floor(n / 8)
-    local n_bits = n % 8
+    local n_digits = math.floor(n / 26)
+    local n_bits = n % 26
 
-    local digits = self.digits
     local result = {}
 
-    if n_bytes > 0 then
-        result = lshift_bytes(digits, n_bytes)
+    if n_digits > 0 then
+        result = lshift_digits(self.digits, n_digits)
     else
-        result = self.digits
+        for i = 1, #self.digits do result[i] = self.digits[i] end
     end
 
     if n_bits > 0 then
-        local rmask = bit.blshift(1, 8 - n_bits) - 1
-        local lmask = BASE - 1 - rmask
-
+        local multiplier = 2 ^ n_bits
         local carry = 0
         local new_digits = {}
         for i = 1, #result do
-            local low = bit.blshift(bit.band(result[i], rmask), n_bits)
-            local high = bit.brshift(bit.band(result[i], lmask), 8 - n_bits)
-
-            new_digits[i] = low + carry
-            carry = high
+            local val = (result[i] or 0) * multiplier + carry
+            new_digits[i] = val % BASE
+            carry = math.floor(val / BASE)
         end
         if carry > 0 then
             table.insert(new_digits, carry)
